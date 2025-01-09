@@ -4,6 +4,11 @@
 # Devstreak-Frontend
 
 > Frontend for the Devstreak platform built with Vite, React, TypeScript, and TailwindCSS.
+> Designed to handle both traditional web integration and blockchain workflows, specifically for Solana development. The template comes with built-in polyfills to facilitate seamless Solana integration.
+
+> webpack.config.js: holds the polyfills
+
+> NOTE: This components are templates, and awaits design.
 
 ## 🚀 Features
 
