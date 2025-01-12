@@ -1,69 +1,118 @@
-// AI GEN TEMPLATE FIX
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getUserInfo } from '../utils/auth';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginChatAgent, signupChatAgent } from "../utils/auth";
 
-const LoginSignup = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+const LoginSignup: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLogin, setIsLogin] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
-      // Make your login API request to get the token here
-      const token = 'your_jwt_token'; // Replace with your logic to get token
+      if (isLogin) {
+        // Login logic
+        const result = await loginChatAgent(email, password);
+        if (!result.success) {
+          return alert(result.message);
+        }
 
-      // Fetch user info based on the token
-      const userInfo = await getUserInfo(token);
+        // Store token and email in localStorage
+        // localStorage.setItem("authToken", result.token);
+        localStorage.setItem("email", email);
 
-      if (userInfo.is_super_admin) {
-        navigate('/super-admin'); // Redirect to Super Admin page
-      } else if (userInfo.is_admin) {
-        navigate('/admin-dashboard'); // Redirect to Admin Dashboard
+        // Redirect based on role
+        if (result.message?.is_super_admin) {
+          navigate("/super-admin");
+        } else if (result.message?.is_admin) {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/user");
+        }
       } else {
-        navigate('/home'); // Or to a regular user page
+        // Signup logic
+        await signupChatAgent(email, true, true, password);
+        setShowModal(true);
+        setEmail("");
+        setPassword("");
       }
-    } catch (err) {
-      setError('Login failed. Please try again.');
+    } catch (error: any) {
+      alert(error.message || "An error occurred. Please try again.");
+    }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    if (!isLogin) {
+      navigate("/user");
     }
   };
 
   return (
-    <div className="max-w-md mx-auto">
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block">Email</label>
+    <div className="min-h-screen bg-black text-white text-center p-5">
+      <div className="mt-24">
+        <h1 className="text-5xl font-bold mb-4">
+          {isLogin ? "Login to Your Account" : "Create a New Account"}
+        </h1>
+        <p className="text-lg mb-8">
+          {isLogin
+            ? "Test: Login to access your dashboard and features."
+            : "Join our platform and start your journey today!"}
+        </p>
+
+        <form onSubmit={handleSubmit} className="flex flex-col items-center">
           <input
-            id="email"
             type="email"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md"
+            className="w-full max-w-md px-4 py-2 mb-4 text-black rounded-full focus:outline-none focus:ring-2 focus:ring-[#3BE803]"
+            required
           />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block">Password</label>
           <input
-            id="password"
             type="password"
+            placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md"
+            className="w-full max-w-md px-4 py-2 mb-4 text-black rounded-full focus:outline-none focus:ring-2 focus:ring-[#3BE803]"
+            required
           />
+          <button
+            type="submit"
+            className="bg-[#3BE803] text-white py-3 px-6 rounded-full font-bold hover:bg-[#2FD700] transition duration-300"
+          >
+            {isLogin ? "LOGIN" : "SIGN UP"}
+          </button>
+        </form>
+
+        <p className="mt-4 text-sm">
+          {isLogin ? "Don’t have an account?" : "Already have an account?"}{" "}
+          <span
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-[#3BE803] cursor-pointer"
+          >
+            {isLogin ? "Sign Up" : "Login"}
+          </span>
+        </p>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white text-black p-8 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">Thank You!</h2>
+            <p>You’ve successfully signed up. Redirecting...</p>
+            <button
+              onClick={closeModal}
+              className="mt-4 bg-[#3BE803] text-white py-2 px-4 rounded-full font-bold hover:bg-[#2FD700] transition duration-300"
+            >
+              Continue
+            </button>
+          </div>
         </div>
-
-        {error && <div className="text-red-500">{error}</div>}
-
-        <button
-          type="submit"
-          className="w-full py-2 bg-blue-500 text-white rounded-md"
-        >
-          Login
-        </button>
-      </form>
+      )}
     </div>
   );
 };

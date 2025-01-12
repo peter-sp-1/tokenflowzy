@@ -1,24 +1,73 @@
-# DSTreak Web Template
+### **BEING UPDATED...**
 
-This is a full-stack web application template designed to handle both traditional web integration and blockchain workflows, specifically for Solana development. The template comes with built-in polyfills to facilitate seamless Solana integration.
 
-## Tested on
-- solcasino
-- weave-beta
+# Devstreak-Frontend
 
-## Features
+> Frontend for the Devstreak platform built with Vite, React, TypeScript, and TailwindCSS.
+> Designed to handle both traditional web integration and blockchain workflows, specifically for Solana development. The template comes with built-in polyfills to facilitate seamless Solana integration.
 
-- **React**: The application is built with [React](https://reactjs.org/) for building user interfaces. It is optimized for modern web development, providing a smooth experience for both users and developers.
-- **TypeScript**: The application uses [TypeScript](https://www.typescriptlang.org/) for type safety and better development experience, reducing runtime errors and improving code readability.
-- **TailwindCSS**: [TailwindCSS](https://tailwindcss.com/) is used for utility-first CSS styling, making it easy to create responsive, modern designs quickly.
-- **Solana Polyfills**: This template includes all necessary polyfills for Solana development, enabling easy interaction with Solana blockchain without additional setup.
-- **JWT Authentication**: Secure user authentication using JWT tokens, enabling role-based access to different sections of the app (e.g., SuperAdmin, Admin).
-- **Flexible Backend Integration**: Ready to integrate with any backend for fetching user data, handling authentication, and managing app workflows.
-- **Routing**: The app uses [React Router](https://reactrouter.com/) for navigation, providing a dynamic and scalable routing system.
+> webpack.config.js: holds the polyfills
 
-## Installation
+> NOTE: This components are templates, and awaits design.
+
+## 🚀 Features
+
+- 🔒 Role-based authentication (Superadmin, Admin)
+- 🌟 Built with modern technologies: Vite, React, TypeScript, TailwindCSS
+- 📦 Modular folder structure: components, pages, assets..
+
+## 🛠️ Tech Stack
+
+- **Frontend Framework:** React + Vite
+- **CSS Framework:** TailwindCSS
+- **Language:** TypeScript
+
+## 📂 Project Structure
+
+```plaintext
+src/
+├── assets/         # Static assets
+├── components/     # Reusable UI 
+.
+.
+.
+```
+
+## 🔧 Setup and Development
 
 1. Clone the repository:
    ```bash
-   git clone <repo_url>
-   cd dstreak
+   git clone <repo>
+   cd Devstreak-frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Build for production:
+   ```bash
+   npm run build
+   ```
+
+## 🧩 Contributing
+
+Contributions are welcome! Please follow these steps:
+1. Fork the repository.
+2. Create a new branch (`feature/my-feature`).
+3. Commit your changes.
+4. Push your branch and submit a pull request.
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+```
+
+---
