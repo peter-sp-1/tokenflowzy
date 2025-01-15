@@ -22,7 +22,7 @@ const Sidebar: React.FC<{ isAuthenticated: boolean }> = ({ isAuthenticated }) =>
     };
 
     return (
-        <div className={`z-50 flex flex-col pt-0 w-64 min-h-[50vh] border-r ${isDarkTheme ? 'text-gray-100' : 'text-gray-900'} border-gray-700 mt-16 fixed p-3 space-y-2`}>
+        <div className={`z-50 flex flex-col w-64 h-[50vh] border-r ${isDarkTheme ? 'text-gray-100' : 'text-gray-900'} border-gray-700 relative p-3 space-y-2`}>
             <div className="flex flex-col space-y-2">
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.path;

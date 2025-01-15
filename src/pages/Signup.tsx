@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiUser } from "react-icons/fi";
 import { useThemeStore } from '../store/themeStore';
+import SpaceBackground from '../components/SpaceBackground';
 
 // Mock signup function
 const mockSignupUser = async (email: string, password: string) => {
@@ -61,7 +62,8 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-[80vh] ${!isDarkTheme ? 'text-white' : 'text-gray-800'} flex items-center justify-center p-5`}>
+    <div className={`min-h-[80vh] ${!isDarkTheme ? 'text-white' : 'text-gray-800'} flex items-center justify-center p-5 relative`}>
+      <SpaceBackground color={!isDarkTheme ? '#8B5CF6' : '#6D28D9'} />
       <motion.div
         className="w-full max-w-md p-8 rounded-xl shadow-lg backdrop-blur-sm bg-white/10"
         variants={containerVariants}
@@ -73,7 +75,7 @@ const Signup: React.FC = () => {
           <motion.div variants={inputVariants} className="space-y-2">
             <label className="block text-sm font-medium">Username</label>
             <div className="relative">
-              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <FiUser color={`${!isDarkTheme ? '#8B5CF6' : '#6D28D9'}`} className="absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
                 type="text"
                 value={username}
@@ -88,7 +90,7 @@ const Signup: React.FC = () => {
           <motion.div variants={inputVariants} className="space-y-2">
             <label className="block text-sm font-medium">Email</label>
             <div className="relative">
-              <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <FiMail color={`${!isDarkTheme ? '#8B5CF6' : '#6D28D9'}`} className="absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
                 type="email"
                 value={email}
@@ -103,7 +105,7 @@ const Signup: React.FC = () => {
           <motion.div variants={inputVariants} className="space-y-2">
             <label className="block text-sm font-medium">Password</label>
             <div className="relative">
-              <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <FiLock color={`${!isDarkTheme ? '#8B5CF6' : '#6D28D9'}`} className="absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
                 type="password"
                 value={password}

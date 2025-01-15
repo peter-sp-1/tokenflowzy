@@ -6,6 +6,7 @@ import Signup from './pages/Signup';
 import UsersPage from './pages/UsersPage';
 import SuperAdmin from './pages/SuperAdmin';
 import Admin from './pages/Admin';
+import Task from './pages/Task';
 import DefaultLayout from './layouts/defaultLayout';
 import { useAuthStore } from './store/authStore';
 
@@ -31,7 +32,9 @@ const App: React.FC = () => {
                 isAuthenticated ? <Navigate to="/" /> : <Signup />
               } />
               <Route path="/super-admin" element={<SuperAdmin />} />
-                
+              <Route path="/tasks" element={
+                isAuthenticated ? <Task /> : <Navigate to="/login" />
+              } />
               <Route path='*' element={<Navigate to='/' />} />
           </Routes>
         </DefaultLayout>

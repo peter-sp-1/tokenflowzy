@@ -14,11 +14,10 @@ const Leaderboard = () => {
     ];
 
     return (
-        <div className="max-w-lg mx-auto p-5"> 
-            <h2 className="text-2xl font-bold text-center mb-4">Leaderboard</h2>
-            <ul className="space-y-4">
+        <div className="mx-auto p-5"> 
+            <ul className="space-y-4 w-96">
                 {leaders.map((leader) => (
-                    <li key={leader.position} className={`flex relative items-center p-4 overflow-hidden rounded-lg ${isDarkTheme ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black'} hover:shadow-lg transition-shadow duration-300`}> 
+                    <li key={leader.position} className={`flex w-full relative items-center p-4 overflow-hidden rounded-lg ${isDarkTheme ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black'} hover:shadow-lg transition-shadow duration-300`}> 
                         <span className="font-bold text-xl mr-4">{leader.position}.</span>
                         <img src={leader.image} alt={leader.name} className="w-12 h-12 rounded-full mr-4" />
                         <span className={`text-lg font-medium ${isDarkTheme ? 'text-white' : 'text-black'}`}>{leader.name}</span>
@@ -34,7 +33,7 @@ const Home = () => {
   const isDarkTheme = useThemeStore((state: ThemeState) => state.isDarkTheme);
 
     return (
-        <div className={`bg-transparent min-h-screen ${!isDarkTheme ? 'text-white' : 'text-black'}`}> 
+        <div className={`w-full flex bg-transparent min-h-screen ${!isDarkTheme ? 'text-white' : 'text-black'}`}> 
           <div className="stars fixed w-screen h-screen right-0 top-0">
             {Array(100).fill(null).map((_, index) => (
               <div key={index} className="star" style={{

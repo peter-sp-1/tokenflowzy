@@ -13,7 +13,7 @@ const Navbar = () => {
     const navigate = useNavigate();
 
     return (
-        <nav className={`px-4 flex justify-between items-center p-4 ${!isDarkTheme ? 'bg-transparent text-white' : 'bg-transparent text-black'} shadow-none`}> 
+        <nav className={`px-4 flex justify-between items-center sticky z-50 top-0 p-4 ${!isDarkTheme ? 'bg-transparent text-white' : 'bg-transparent text-black'} shadow-none`}> 
             <h1 className="text-xl font-bold">devstreak</h1>
             <div className="flex items-center gap-4">
                 <button onClick={toggleTheme} className="flex items-center p-2 rounded-full hover:bg-gray-700 transition duration-300">
