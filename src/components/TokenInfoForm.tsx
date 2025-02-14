@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import {
   FiFileText,
@@ -37,8 +37,6 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
   onDescriptionChange,
   onImageChange,
 }) => {
-  const [isClickable, setIsClickable] = useState(false);
-
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
