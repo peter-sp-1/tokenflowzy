@@ -16,12 +16,6 @@ const Header: React.FC = () => {
             >
               Token Creator
             </Link>
-            <Link
-              to="/create-liquidity"
-              className="hover:text-green-300 transition-colors"
-            >
-              Create Liquidity
-            </Link>
           </nav>
         </div>
       </div>

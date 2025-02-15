@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   FiFileText,
   FiHash,
@@ -37,6 +38,8 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
   onDescriptionChange,
   onImageChange,
 }) => {
+  const navigate = useNavigate();
+
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -59,6 +62,11 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
     },
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate("/");
+  };
+
   return (
     <div className="relative text-white flex items-center justify-center px-4 sm:px-0">
       <motion.div
@@ -67,7 +75,7 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
         initial="hidden"
         animate="visible"
       >
-        <form className="space-y-4 sm:space-y-6">
+        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
           <motion.div variants={inputVariants} className="space-y-2">
             <div className="relative bg-transparent">
               <FiFileText
