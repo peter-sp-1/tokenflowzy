@@ -3,21 +3,24 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate,
+  // Navigate,
 } from "react-router-dom";
 // import Home from './pages/Home';
 import TokenCreator from "./components/Generator";
 import Header from "./components/Header";
+import WalletContextProvider from "./solactions/WalletConnect";
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <Header />
-      {/* public routes */}
-      <Routes>
-        <Route path="/" element={<TokenCreator />} />
-      </Routes>
-    </Router>
+    <WalletContextProvider>
+      <Router>
+        <Header />
+        {/* public routes */}
+        <Routes>
+          <Route path="/" element={<TokenCreator />} />
+        </Routes>
+      </Router>
+    </WalletContextProvider>
   );
 };
 

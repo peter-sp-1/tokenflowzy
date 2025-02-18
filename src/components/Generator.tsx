@@ -2,6 +2,7 @@ import { useState } from "react";
 import TokenInfoForm from "./TokenInfoForm";
 import TokenExtensions, { TokenExtension } from "./TokenExtensions";
 import { Howto } from "./Howto";
+import { CustomWalletMultiButton } from "@/solactions/WalletConnect";
 
 export default function TokenCreator() {
   const [name, setName] = useState("");

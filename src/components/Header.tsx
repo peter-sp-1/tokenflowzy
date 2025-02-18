@@ -1,3 +1,4 @@
+import { CustomWalletMultiButton } from "@/solactions/WalletConnect";
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -10,18 +11,19 @@ const Header: React.FC = () => {
             TokenFlowzy
           </Link>
           <nav className="space-x-6">
-            <Link
+            {/* <Link
               to="/token-creator"
               className="hover:text-green-300 transition-colors"
             >
               Token Creator
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               to="/create-liquidity"
               className="hover:text-green-300 transition-colors"
             >
               Create Liquidity
-            </Link>
+            </Link> */}
+            <CustomWalletMultiButton />
           </nav>
         </div>
       </div>
