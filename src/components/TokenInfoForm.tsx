@@ -22,6 +22,7 @@ interface TokenInfoFormProps {
   onSupplyChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onImageChange: (file: File | null) => void;
+  onSubmit: (e: React.FormEvent) => void;
 }
 
 const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
@@ -36,6 +37,7 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
   onSupplyChange,
   onDescriptionChange,
   onImageChange,
+  onSubmit,
 }) => {
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -180,6 +182,7 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
 
           <motion.button
             type="submit"
+            onClick={onSubmit}
             className="w-full pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-lg border border-[#009933] bg-black/80 focus:outline-none focus:ring-2 focus:ring-[#009933] text-sm sm:text-base align-center"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}

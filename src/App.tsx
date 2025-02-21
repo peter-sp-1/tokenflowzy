@@ -5,6 +5,8 @@ import {
   Routes,
   // Navigate,
 } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+
 // import Home from './pages/Home';
 import TokenCreator from "./components/Generator";
 import Header from "./components/Header";
@@ -15,6 +17,7 @@ const App: React.FC = () => {
     <WalletContextProvider>
       <Router>
         <Header />
+        <Toaster position="top-right" />
         {/* public routes */}
         <Routes>
           <Route path="/" element={<TokenCreator />} />
