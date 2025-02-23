@@ -14,10 +14,15 @@ import {
     createMintToInstruction,
     getAssociatedTokenAddress,
     createAssociatedTokenAccountInstruction,
+    TYPE_SIZE,
+    LENGTH_SIZE,
+    createInitializeMetadataPointerInstruction,
+    createInitializePermanentDelegateInstruction,
 } from '@solana/spl-token';
 import { WalletContextState } from '@solana/wallet-adapter-react';
-import { Metaplex, walletAdapterIdentity } from '@metaplex-foundation/js';
-import { createTokenMetadata } from './metadata';
+//import { Metaplex, walletAdapterIdentity } from '@metaplex-foundation/js';
+import { createInitializeInstruction, pack, TokenMetadata } from '@solana/spl-token-metadata';
+
 
 async function uploadMetadata(image: File | null | undefined, name: string, symbol: string, description: string) {
     if (!image) return null;
@@ -70,71 +75,136 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
     console.log(config)
 
     const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-    // Null address to renounce ownership
     const nullAddress = new PublicKey('11111111111111111111111111111111');
-
     const payer = wallet.publicKey;
     const mintAuthority = wallet.publicKey;
     const mintKeypair = Keypair.generate();
     const mint = mintKeypair.publicKey;
 
-    const extensions: ExtensionType[] = [];
+    if (!config.description) {
+        config.description = 'No description provided';
+    }
+    const metadata: TokenMetadata = {
+        mint: mint,
+        name: config.name,
+        symbol: config.symbol,
+        uri: '',
+        additionalMetadata: [['description', config.description]],
+    };
 
+
+    // Bundle all instructions into a single transaction
+    const transaction = new Transaction();
+    
+    // Calculate mint account size and rent
+    const extensions: ExtensionType[] = [ExtensionType.MetadataPointer];
     if (config.extensions.transferFee) {
         extensions.push(ExtensionType.TransferFeeConfig);
     }
     if (config.extensions.interestBearing) {
         extensions.push(ExtensionType.InterestBearingConfig);
     }
-
     const mintLen = getMintLen(extensions);
-    const mintLamports = await connection.getMinimumBalanceForRentExemption(mintLen);
+    const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
 
-    const transaction = new Transaction().add(
-        SystemProgram.createAccount({
-        fromPubkey: payer,
-        newAccountPubkey: mint,
-        space: mintLen,
-        lamports: mintLamports,
-        programId: TOKEN_2022_PROGRAM_ID,
-        })
-    );
+    const mintLamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
 
-    if (config.extensions.transferFee) {
-        const feeBasisPoints = 100; // Example: 1% fee
-        const maxFee = BigInt(9 * 10 ** config.decimals); // Example: 9 tokens
+    // Add create mint account instruction
+    if (config.extensions.renounce) {
+        console.log(config.extensions.renounce);
         transaction.add(
-        createInitializeTransferFeeConfigInstruction(
-            mint,
-            payer,
-            payer,
-            feeBasisPoints,
-            maxFee,
-            TOKEN_2022_PROGRAM_ID
-        )
+            SystemProgram.createAccount({
+                fromPubkey: payer,
+                newAccountPubkey: mint,
+                space: mintLen,
+                lamports: mintLamports,
+                programId: TOKEN_2022_PROGRAM_ID,
+            }),
+            
+            createInitializeMetadataPointerInstruction(
+                mint, 
+                payer, 
+                mint, 
+                TOKEN_2022_PROGRAM_ID
+            ),
+
+            createInitializeMintInstruction(
+                mint,
+                config.decimals,
+                nullAddress,
+                nullAddress,
+                TOKEN_2022_PROGRAM_ID
+            ),
+
+            createInitializeInstruction({
+                programId: TOKEN_2022_PROGRAM_ID,
+                mint: mint,
+                metadata: mint,
+                name: metadata.name,
+                symbol: metadata.symbol,
+                uri: metadata.uri,
+                mintAuthority: nullAddress,
+                updateAuthority: nullAddress,
+            }),
+        );
+    } else {
+        transaction.add(
+            SystemProgram.createAccount({
+                fromPubkey: payer,
+                newAccountPubkey: mint,
+                space: mintLen,
+                lamports: mintLamports,
+                programId: TOKEN_2022_PROGRAM_ID,
+            }),
+            
+            createInitializeMetadataPointerInstruction(
+                mint, 
+                payer, 
+                mint, 
+                TOKEN_2022_PROGRAM_ID
+            ),
+
+            createInitializeMintInstruction(
+                mint, 
+                config.decimals, 
+                payer, 
+                payer, 
+                TOKEN_2022_PROGRAM_ID
+            ),
+
+            createInitializeInstruction({
+                programId: TOKEN_2022_PROGRAM_ID,
+                mint: mint,
+                metadata: mint,
+                name: metadata.name,
+                symbol: metadata.symbol,
+                uri: metadata.uri,
+                mintAuthority: payer,
+                updateAuthority: payer,
+            }),
         );
     }
 
-    transaction.add(
-        createInitializeMintInstruction(
-        mint,
-        config.decimals,
-        mintAuthority,
-        null,
-        TOKEN_2022_PROGRAM_ID
-        )
-    );
+    
+    // Add transfer fee config if enabled
+    if (config.extensions.transferFee) {
+        const feeBasisPoints = 100;
+        const maxFee = BigInt(9 * 10 ** config.decimals);
+        transaction.add(
+            createInitializeTransferFeeConfigInstruction(
+                mint,
+                payer,
+                payer,
+                feeBasisPoints,
+                maxFee,
+                TOKEN_2022_PROGRAM_ID
+            )
+        );
+    }
 
-    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    transaction.feePayer = payer;
-    transaction.partialSign(mintKeypair);
+    
 
-    const signedTx = await wallet.signTransaction(transaction);
-    const txId = await connection.sendRawTransaction(signedTx.serialize());
-    await connection.confirmTransaction(txId, 'confirmed');
-
-    console.log('New Token Created:', generateExplorerTxUrl(txId));
-
+    // Create and add ATA instruction
     const sourceAccount = await getAssociatedTokenAddress(
         mint,
         payer,
@@ -142,8 +212,7 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
         TOKEN_2022_PROGRAM_ID
     );
     
-    // Create ATA transaction
-    const createAtaTransaction = new Transaction().add(
+    transaction.add(
         createAssociatedTokenAccountInstruction(
             payer,
             sourceAccount,
@@ -153,118 +222,73 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
         )
     );
 
-    createAtaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    createAtaTransaction.feePayer = payer;
-
-    const signedAtaTx = await wallet.signTransaction(createAtaTransaction);
-    const ataTxId = await connection.sendRawTransaction(signedAtaTx.serialize());
-    await connection.confirmTransaction(ataTxId, 'confirmed');
-
-    console.log('ATA Created:', generateExplorerTxUrl(ataTxId));
-
-    
+    // Add mint-to instruction
     const mintAmount = BigInt(Number(config.supply) * 10 ** config.decimals);
-    const mintToTx = new Transaction().add(
+    transaction.add(
         createMintToInstruction(
-        mint,
-        sourceAccount,
-        mintAuthority,
-        mintAmount,
-        [],
-        TOKEN_2022_PROGRAM_ID
+            mint,
+            sourceAccount,
+            mintAuthority,
+            mintAmount,
+            [],
+            TOKEN_2022_PROGRAM_ID
         )
     );
 
-    mintToTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    mintToTx.feePayer = payer;
-
-    const signedMintToTx = await wallet.signTransaction(mintToTx);
-    const mintSig = await connection.sendRawTransaction(signedMintToTx.serialize());
-    await connection.confirmTransaction(mintSig, 'confirmed');
-
-    console.log('Tokens Minted:', generateExplorerTxUrl(mintSig));
-
-    if (config.extensions.renounce) {
-        const renounceTx = new Transaction().add(
-        createInitializeMintInstruction(
-            mint,
-            config.decimals,
-            nullAddress,
-            null,
-            TOKEN_2022_PROGRAM_ID
-        )
-        );
-
-        renounceTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-        renounceTx.feePayer = payer;
-
-        const signedRenounceTx = await wallet.signTransaction(renounceTx);
-        const renounceSig = await connection.sendRawTransaction(signedRenounceTx.serialize());
-        await connection.confirmTransaction(renounceSig, 'confirmed');
-
-        console.log('Mint Authority Renounced:', generateExplorerTxUrl(renounceSig));
-    }
-
-    await createTokenMetadata({
-        wallet,
-        mintAddress: mint.toBase58(),
-        name: config.name,
-        symbol: config.symbol,
-        
-    })
-
-    // After minting tokens and before returning, add metadata
-    // const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
-    // const metadataAccount = PublicKey.findProgramAddressSync(
-    //     [
-    //         Buffer.from('metadata'),
-    //         TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-    //         mint.toBuffer(),
-    //     ],
-    //     TOKEN_METADATA_PROGRAM_ID
-    // )[0];
-
-    // Upload image if provided
-    // const imageUri = await uploadMetadata(config.image, config.name, config.symbol, config.description || '');
-
-    // After minting tokens, create metadata
-    // const metadataResult = await createTokenMetadata({
-    //     wallet,
-    //     mintAddress: mint.toString(),
-    //     name: config.name,
-    //     symbol: config.symbol,
-    //     uri: imageUri || ''
-    // });
-
-    // const metaplex = Metaplex.make(connection).use(walletAdapterIdentity(wallet));
+    // // Add renounce instruction if enabled
+    // if (config.extensions.renounce) {
+    //     transaction.add(
+    //         createInitializeMintInstruction(
+    //             mint,
+    //             config.decimals,
+    //             nullAddress,
+    //             null,
+    //             TOKEN_2022_PROGRAM_ID
+    //         )
+    //     );
+    // }
 
 
-    // await metaplex.nfts().create({
-    //     mint,
-    //     name: config.name,
-    //     symbol: config.symbol,
-    //     uri: 'https://example.com/metadata.json',
-    //   });
-      
-    // console.log('Metadata Created');
-    // return {
-    //     mint: mint.toString(),
-    //     mintTx: txId,
-    //     mintSig: mintSig,
-    //     owner: payer.toString(),
-    //     sourceAccount: sourceAccount.toString(),
-    // };
-    // console.log('Metadata Created:', generateExplorerTxUrl(metadataResult.signature));
-
-    // return {
-    //     mint: mint.toString(),
-    //     mintTx: txId,
-    //     mintSig: mintSig,
-    //     metadataSig: metadataResult.signature,
-    //     owner: payer.toString(),
-    //     sourceAccount: sourceAccount.toString(),
-    //     metadata: metadataResult?.metadataAddress.toString()
-    // };
+    // Sign and send transaction
+    const latestBlockhash = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = latestBlockhash.blockhash;
+    transaction.feePayer = payer;  // Set wallet as fee payer
     
+    // First sign with mint keypair
+    transaction.partialSign(mintKeypair);
+    
+    // Then let the wallet sign to pay fees
+    const signedTx = await wallet.signTransaction(transaction);
+    
+    // Send with preflight disabled and retry on failure
+    const txId = await connection.sendRawTransaction(signedTx.serialize(), {
+        skipPreflight: true,
+        maxRetries: 3,
+    });
+    
+    // Wait for confirmation with commitment
+    await connection.confirmTransaction({
+        signature: txId,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+    }, 'confirmed');
+
+    console.log('Token Created and Initialized:', generateExplorerTxUrl(txId));
+
+    // Add delay before metadata creation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Create metadata in a separate transaction
+    console.log("Creating metadata for token:", {
+        mint: mint.toBase58(),
+        name: config.name,
+        symbol: config.symbol
+    });
+
+    // return {
+    //     mint: mint.toString(),
+    //     txId,
+    //     owner: payer.toString(),
+    //     sourceAccount: sourceAccount.toString(),
+    // };
 }
-  
