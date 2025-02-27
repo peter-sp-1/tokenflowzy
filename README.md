@@ -64,7 +64,7 @@ pnpm build
 ## 👥 Team
 
 - **Orkar A. M.** - Lead Developer & Architecture
-- **Adamu** - Frontend Development
+- **Adamu** - Graphics Designer
 - **Peter** - Smart Contract Integration
 - **Aneebs** - UI/UX Design
 
