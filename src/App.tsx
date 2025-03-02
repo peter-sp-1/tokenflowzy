@@ -6,7 +6,6 @@ import TokenCreator from "./components/Generator";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import WalletContextProvider from "./solactions/WalletConnect";
-import { UpdateTokenMetadata } from "./components/met";
 
 const App: React.FC = () => {
   return (
@@ -18,7 +17,6 @@ const App: React.FC = () => {
             <Toaster position="top-right" />
             <Routes>
               <Route path="/" element={<TokenCreator />} />
-              <Route path="/met" element={<UpdateTokenMetadata />} />
             </Routes>
           </main>
           <Footer />
