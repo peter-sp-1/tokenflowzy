@@ -71,7 +71,13 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
       >
         <div className="p-6 md:p-8">
           <h2 className="text-2xl font-bold text-white mb-6">Create Token</h2>
-          <form className="space-y-5">
+          <form
+            className="space-y-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSubmit(e);
+            }}
+          >
             {[
               {
                 icon: <FiFileText />,
@@ -90,7 +96,8 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
               {
                 icon: <FiDatabase />,
                 value: decimals,
-                onChange: onDecimalsChange,
+                onChange: (value: string) =>
+                  onDecimalsChange(Number(value) || 0),
                 placeholder: "Decimals",
                 type: "number",
               },
@@ -113,7 +120,9 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
                 <input
                   type={field.type}
                   value={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    field.onChange(e.target.value)
+                  }
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/50 border border-[#009933]/30 
                     focus:border-[#009933] focus:ring-1 focus:ring-[#009933] transition-all duration-200
                     text-white placeholder-gray-400 text-sm md:text-base"
@@ -135,6 +144,7 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
                   text-white placeholder-gray-400 text-sm md:text-base resize-none"
                 placeholder="Token Description"
                 rows={4}
+                required
               />
             </motion.div>
 
@@ -158,7 +168,6 @@ const TokenInfoForm: React.FC<TokenInfoFormProps> = ({
 
             <motion.button
               type="submit"
-              onClick={onSubmit}
               className="w-full py-3 px-4 rounded-xl bg-[#009933] text-white font-medium
                 hover:bg-[#00802b] transition-colors duration-200 text-sm md:text-base
                 focus:outline-none focus:ring-2 focus:ring-[#009933] focus:ring-offset-2 focus:ring-offset-black"
