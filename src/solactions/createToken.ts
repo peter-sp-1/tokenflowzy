@@ -17,33 +17,33 @@ import {
     TYPE_SIZE,
     LENGTH_SIZE,
     createInitializeMetadataPointerInstruction,
-    createInitializePermanentDelegateInstruction,
+    // createInitializePermanentDelegateInstruction,
 } from '@solana/spl-token';
-import { WalletContextState } from '@solana/wallet-adapter-react';
+import { AnchorWallet } from '@solana/wallet-adapter-react';
 //import { Metaplex, walletAdapterIdentity } from '@metaplex-foundation/js';
 import { createInitializeInstruction, pack, TokenMetadata } from '@solana/spl-token-metadata';
 
 
-async function uploadMetadata(image: File | null | undefined, name: string, symbol: string, description: string) {
-    if (!image) return null;
+// async function uploadMetadata(image: File | null | undefined, name: string, symbol: string, description: string) {
+//     if (!image) return null;
     
-    try {
-        const formData = new FormData();
-        formData.append('file', image);
+//     try {
+//         const formData = new FormData();
+//         formData.append('file', image);
         
-        // Upload to a service like NFT.Storage or Arweave
-        const response = await fetch('https://hidden-broken-yard.solana-devnet.quiknode.pro/7fef0c379b4a84c33cf93ab6d9ada7a5916eba9b', {
-            method: 'POST',
-            body: formData,
-        });
+//         // Upload to a service like NFT.Storage or Arweave
+//         const response = await fetch('https://hidden-broken-yard.solana-devnet.quiknode.pro/7fef0c379b4a84c33cf93ab6d9ada7a5916eba9b', {
+//             method: 'POST',
+//             body: formData,
+//         });
         
-        const { uri } = await response.json();
-        return uri;
-    } catch (error) {
-        console.error('Error uploading metadata:', error);
-        return null;
-    }
-}
+//         const { uri } = await response.json();
+//         return uri;
+//     } catch (error) {
+//         console.error('Error uploading metadata:', error);
+//         return null;
+//     }
+// }
 
 export interface TokenConfig {
     name: string;
@@ -65,7 +65,7 @@ function generateExplorerTxUrl(txId: string | any) {
   
 interface CreateTokenParams {
     config: TokenConfig;
-    wallet: WalletContextState;
+    wallet: AnchorWallet;
 }
   
 export async function createCustomToken({ config, wallet }: CreateTokenParams) {
@@ -278,17 +278,10 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
     // Add delay before metadata creation
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Create metadata in a separate transaction
-    console.log("Creating metadata for token:", {
+    return {
         mint: mint.toBase58(),
-        name: config.name,
-        symbol: config.symbol
-    });
-
-    // return {
-    //     mint: mint.toString(),
-    //     txId,
-    //     owner: payer.toString(),
-    //     sourceAccount: sourceAccount.toString(),
-    // };
+        txId: txId,
+        // owner: payer.toString(),
+        // sourceAccount: sourceAccount.toString(),
+    };
 }

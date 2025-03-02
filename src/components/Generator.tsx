@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import TokenInfoForm from "./TokenInfoForm";
 import TokenExtensions, { TokenExtension } from "./TokenExtensions";
 import { Howto } from "./Howto";
 import { createCustomToken, TokenConfig } from "@/solactions/createToken";
+import TokenCreationSuccess from "./ui/TokenCreationSuccess";
+
 import { toast } from "react-hot-toast"; // For error notifications
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 export default function TokenCreator() {
   const [name, setName] = useState("");
@@ -17,6 +19,11 @@ export default function TokenCreator() {
   const [activeExtensions, setActiveExtensions] = useState<TokenExtension[]>(
     []
   );
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [tokenDetails, setTokenDetails] = useState<{
+    mint: string;
+    txId: string;
+  } | null>(null);
 
   const handleExtensionsChange = (extensions: TokenExtension[]) => {
     setActiveExtensions(extensions.filter((ext) => ext.isConnected));
@@ -24,7 +31,7 @@ export default function TokenCreator() {
 
   // Inside your component
   const wallet = useAnchorWallet();
-  const { connection } = useConnection();
+  // const { connection } = useConnection();
   console.log(wallet?.publicKey);
 
   // Validation function
@@ -74,19 +81,17 @@ export default function TokenCreator() {
 
       validateTokenConfig(tokenConfig);
 
-      // toast.loading("Creating token...", { id: "create-token" });
       const tokenDetails = await createCustomToken({
         config: tokenConfig,
         wallet,
       });
 
-      toast.success("Token created successfully!", { id: "create-token" });
-      console.log("Token created:", tokenDetails);
+      setTokenDetails(tokenDetails);
+      setShowSuccessModal(true);
 
       console.log("Token created successfully:", tokenDetails);
     } catch (error) {
       console.error("Failed to create token:", error);
-      toast.error("Failed to create token");
       // Handle error in UI
     }
   };
@@ -234,6 +239,14 @@ export default function TokenCreator() {
           />
         </div>
       </motion.div>
+      {tokenDetails && (
+        <TokenCreationSuccess
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          mint={tokenDetails.mint}
+          txId={tokenDetails.txId}
+        />
+      )}
     </div>
   );
 }
