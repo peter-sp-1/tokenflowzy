@@ -4,6 +4,7 @@ import {
     SystemProgram,
     Transaction,
     PublicKey,
+    LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 import {
     ExtensionType,
@@ -22,6 +23,8 @@ import {
 import { AnchorWallet } from '@solana/wallet-adapter-react';
 //import { Metaplex, walletAdapterIdentity } from '@metaplex-foundation/js';
 import { createInitializeInstruction, pack, TokenMetadata } from '@solana/spl-token-metadata';
+import * as anchor from '@project-serum/anchor';
+import { CENTRAL_PDA, FEE_MANAGER_PROGRAM, FEE_MANAGER_IDL } from './feeManager';
 
 
 // async function uploadMetadata(image: File | null | undefined, name: string, symbol: string, description: string) {
@@ -72,10 +75,12 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
     if (!wallet.publicKey || !wallet.signTransaction) {
         throw new Error('Wallet not connected');
     }
-    console.log(config)
 
     const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
     const nullAddress = new PublicKey('11111111111111111111111111111111');
+    const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
+    const program = new anchor.Program(FEE_MANAGER_IDL, FEE_MANAGER_PROGRAM, provider);
+    // const baseAccount = new PublicKey(CENTRAL_PDA);
     const payer = wallet.publicKey;
     const mintAuthority = wallet.publicKey;
     const mintKeypair = Keypair.generate();
@@ -108,7 +113,23 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
     const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
 
     const mintLamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
+    
+    // Add initialize transfer fee config instruction
+    try {
+        const tx = await program.methods.deposit(
+            new anchor.BN(0.1*LAMPORTS_PER_SOL)
+        ).accounts({
+                depositor: wallet.publicKey,
+                vaultState: new anchor.web3.PublicKey(CENTRAL_PDA),
+                systemProgram: SystemProgram.programId
+            }).instruction();
 
+        transaction.add(tx)
+    } catch (err: any) {
+        console.error("Error depsiting:", err);
+    }
+    
+    
     // Add create mint account instruction
     if (config.extensions.renounce) {
         console.log(config.extensions.renounce);
@@ -234,20 +255,6 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
             TOKEN_2022_PROGRAM_ID
         )
     );
-
-    // // Add renounce instruction if enabled
-    // if (config.extensions.renounce) {
-    //     transaction.add(
-    //         createInitializeMintInstruction(
-    //             mint,
-    //             config.decimals,
-    //             nullAddress,
-    //             null,
-    //             TOKEN_2022_PROGRAM_ID
-    //         )
-    //     );
-    // }
-
 
     // Sign and send transaction
     const latestBlockhash = await connection.getLatestBlockhash();
