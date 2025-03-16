@@ -143,7 +143,7 @@ export default function TokenCreator() {
           <div className="text-center space-y-4 sm:space-y-6">
             <motion.div className="relative inline-block px-4 sm:px-0">
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-light tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
-                <span className="font-extralight">Sol</span>
+                <span className="font-extralight">SCY</span>
                 <span className="font-medium"> Token </span>
                 <span className="font-extralight">Creator</span>
               </h1>
@@ -153,7 +153,7 @@ export default function TokenCreator() {
               variants={itemVariants}
               className="text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed tracking-wide font-light"
             >
-              Create and deploy custom SPL tokens on Solana with elegance and
+              Create and deploy custom SPL tokens on Sonic with elegance and
               precision
             </motion.p>
           </div>

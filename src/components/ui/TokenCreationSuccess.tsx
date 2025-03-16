@@ -15,8 +15,8 @@ export default function TokenCreationSuccess({
 }: TokenCreationSuccessProps) {
   if (!isOpen) return null;
 
-  const explorerUrl = `https://solscan.io/tx/${txId}?cluster=devnet`;
-  const tokenUrl = `https://solscan.io/address/${mint}?cluster=devnet`;
+  const explorerUrl = `https://sonicscan.org/tx/${txId}?cluster=devnet`;
+  const tokenUrl = `https://sonicscan.org/address/${mint}?cluster=devnet`;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
