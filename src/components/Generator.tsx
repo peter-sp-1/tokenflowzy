@@ -153,7 +153,7 @@ export default function TokenCreator() {
               variants={itemVariants}
               className="text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed tracking-wide font-light"
             >
-              Create and deploy custom SPL tokens on Solana with elegance and
+              Create and deploy custom SPL tokens on SonicSvm with elegance and
               precision
             </motion.p>
           </div>
