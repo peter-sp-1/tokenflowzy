@@ -153,7 +153,11 @@ export default function TokenCreator() {
               variants={itemVariants}
               className="text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed tracking-wide font-light"
             >
+<<<<<<< HEAD
               Create and deploy custom SPL tokens on Sonic with elegance and
+=======
+              Create and deploy custom SPL tokens on SonicSvm with elegance and
+>>>>>>> 48aaef3018e5d1db9b59922e30b8a0eaeb120eba
               precision
             </motion.p>
           </div>

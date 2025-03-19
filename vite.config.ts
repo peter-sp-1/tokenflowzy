@@ -38,6 +38,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
+    include: ['buffer', 'crypto-browserify', 'stream-browserify'],
     esbuildOptions: {
       define: {
         global: 'globalThis'

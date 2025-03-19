@@ -21,32 +21,12 @@ import {
     // createInitializePermanentDelegateInstruction,
 } from '@solana/spl-token';
 import { AnchorWallet } from '@solana/wallet-adapter-react';
+import 'crypto';
 //import { Metaplex, walletAdapterIdentity } from '@metaplex-foundation/js';
 import { createInitializeInstruction, pack, TokenMetadata } from '@solana/spl-token-metadata';
 import * as anchor from '@project-serum/anchor';
 import { CENTRAL_PDA, FEE_MANAGER_PROGRAM, FEE_MANAGER_IDL } from './feeManager';
 
-
-// async function uploadMetadata(image: File | null | undefined, name: string, symbol: string, description: string) {
-//     if (!image) return null;
-    
-//     try {
-//         const formData = new FormData();
-//         formData.append('file', image);
-        
-//         // Upload to a service like NFT.Storage or Arweave
-//         const response = await fetch('https://hidden-broken-yard.solana-devnet.quiknode.pro/7fef0c379b4a84c33cf93ab6d9ada7a5916eba9b', {
-//             method: 'POST',
-//             body: formData,
-//         });
-        
-//         const { uri } = await response.json();
-//         return uri;
-//     } catch (error) {
-//         console.error('Error uploading metadata:', error);
-//         return null;
-//     }
-// }
 
 export interface TokenConfig {
     name: string;
@@ -61,7 +41,38 @@ export interface TokenConfig {
         renounce?: boolean;
     };
 }
-  
+
+// Replace the existing uploadMetadataToArweave function with:
+// async function uploadMetadataToArweave(metadata: any, wallet: AnchorWallet): Promise<string> {
+//     try {
+//         const bundlr = new WebBundlr(
+//             "https://node1.bundlr.network",
+//             "solana",
+//             wallet,
+//             { providerUrl: "https://api.devnet.solana.com" }
+//         );
+
+//         await bundlr.ready();
+
+//         const metadataBuffer = Buffer.from(JSON.stringify(metadata));
+//         const price = await bundlr.getPrice(metadataBuffer.length);
+//         const balance = await bundlr.getLoadedBalance();
+
+//         if (balance.isLessThan(price)) {
+//             await bundlr.fund(price.minus(balance).multipliedBy(1.1).toNumber());
+//         }
+
+//         const tags = [{ name: "Content-Type", value: "application/json" }];
+//         const uploader = bundlr.uploader.chunkedUploader;
+//         const response = await uploader.uploadData(metadataBuffer, { tags });
+
+//         return `https://arweave.net/${response.id}`;
+//     } catch (error) {
+//         console.error("Error uploading metadata:", error);
+//         throw error;
+//     }
+// }
+
 function generateExplorerTxUrl(txId: string | any) {
     return `https://explorer.solana.com/tx/${txId}?cluster=devnet`;
 }
@@ -89,13 +100,38 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
     if (!config.description) {
         config.description = 'No description provided';
     }
+     // **STEP 1: Upload image if provided**
+     let imageUri = "";
+     if (config.image) {
+         console.log("Uploading image...");
+         imageUri = ""; //await uploadImageToArweave(config.image, wallet, connection);
+         console.log("Image uploaded:", imageUri);
+     }
+
+     // **STEP 2: Upload metadata**
+    // const metadataupload = {
+    //     name: config.name,
+    //     symbol: config.symbol,
+    //     description: config.description || "No description provided",
+    //     image: imageUri,  // Link to uploaded image
+    //     attributes: [],
+    // };
+
+    console.log("Uploading metadata...");
+    const metadataUri = ""; // await uploadMetadataToArweave(metadataupload, wallet);
+    console.log("Metadata uploaded:", metadataUri);
+
+
     const metadata: TokenMetadata = {
         mint: mint,
         name: config.name,
         symbol: config.symbol,
-        uri: '',
+        uri: metadataUri,
         additionalMetadata: [['description', config.description]],
     };
+
+    console.log("Creating token with metadata URI:", metadataUri);
+
 
 
     // Bundle all instructions into a single transaction
