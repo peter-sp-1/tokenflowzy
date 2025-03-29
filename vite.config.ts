@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['buffer', 'process'] as any,
+      include: ['crypto', 'buffer', 'process', 'util', 'stream', 'events'],
       globals: {
         Buffer: true,
         global: true,
@@ -18,15 +18,16 @@ export default defineConfig({
   ],
   define: {
     'process.env.ANCHOR_BROWSER': true,
-    'process.env': process.env
+    'process.env': process.env,
+    global: 'globalThis',
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "stream": "stream-browserify",
-      "crypto": "crypto-browserify",
-      "path": "path-browserify",
-      "os": path.resolve(__dirname, "./src/polyfills/os.ts"),
+      stream: "stream-browserify",
+      crypto: "crypto-browserify",
+      path: "path-browserify",
+      os: path.resolve(__dirname, "./src/polyfills/os.ts"),
     },
   },
   build: {
@@ -38,7 +39,13 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['buffer', 'crypto-browserify', 'stream-browserify'],
+    include: [
+      'buffer', 
+      'crypto-browserify', 
+      'events', 
+      'stream-browserify',
+      'util'
+    ],
     esbuildOptions: {
       define: {
         global: 'globalThis'

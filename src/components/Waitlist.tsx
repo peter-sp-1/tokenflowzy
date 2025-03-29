@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { submitWaitlistEntry } from '../services/WaitlistServices';
 
 const Waitlist: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -13,25 +14,13 @@ const Waitlist: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message);
-      }
+      await submitWaitlistEntry(email);
 
       toast.success('Successfully joined the waitlist!');
       setEmail('');
       setTimeout(() => navigate('/create'), 2000);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to join waitlist');
+      // Error handling is done in the service via toast
     } finally {
       setIsLoading(false);
     }
