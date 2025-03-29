@@ -23,4 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
-WaitlistForm.tsx
+.env .local
+.env.development
+.env.production
