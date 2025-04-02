@@ -9,24 +9,25 @@ const Waitlist: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const handleHomeClick = () => {
+    console.log('Navigating to home...');
+    navigate('/');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       await submitWaitlistEntry(email);
-
       toast.success('Successfully joined the waitlist!');
       setEmail('');
-      setTimeout(() => navigate('/create'), 2000);
     } catch (error) {
       // Error handling is done in the service via toast
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleSkip = () => navigate('/create');
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#000000]">
@@ -36,11 +37,6 @@ const Waitlist: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="backdrop-blur-sm bg-black/30 rounded-2xl shadow-xl border border-[#009933]/30 p-8 relative overflow-hidden"
         >
-          {/* Background Effect */}
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-pink-500/10 blur-[120px] rounded-full animate-pulse" />
-          </div>
-
           <div className="text-center space-y-6">
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-light tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
               <span className="font-extralight">SCY</span>
@@ -76,22 +72,24 @@ const Waitlist: React.FC = () => {
             </form>
 
             <div className="mt-8 pt-8 border-t border-gray-800">
-              <p className="text-gray-400 mb-4">Ready to create your token now?</p>
+              <p className="text-gray-400 mb-4">Return to homepage?</p>
               <button
-                onClick={handleSkip}
-                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-purple-500/20 hover:border-purple-500/50 flex items-center gap-2 mx-auto"
+                onClick={handleHomeClick}
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-purple-500/20 hover:border-purple-500/50 flex items-center gap-2 mx-auto cursor-pointer"
               >
-                Skip Waitlist
+                Home
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
                   <path
-                    fillRule="evenodd"
-                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                   />
                 </svg>
               </button>

@@ -1,33 +1,17 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
-
-import TokenCreator from "./components/Generator";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import WalletContextProvider from "./solactions/WalletConnect";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Landing from "./components/Landing";
 import Waitlist from "./components/Waitlist";
 
-
-const App: React.FC = () => {
+function App() {
   return (
-    <WalletContextProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow pt-16">
-            <Toaster position="top-right" />
-            <Routes>
-              <Route path="/" element={<Waitlist />} />
-              <Route path="/create" element={<TokenCreator />} />
-            </Routes>
-            {/* <WaitlistForm /> */}
-          </main>
-          <Footer />
-        </div>
-      </Router>
-    </WalletContextProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/waitlist" element={<Waitlist />} />
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;
