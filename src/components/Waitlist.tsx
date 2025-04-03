@@ -20,10 +20,35 @@ const Waitlist: React.FC = () => {
 
     try {
       await submitWaitlistEntry(email);
-      toast.success('Successfully joined the waitlist!');
+      toast.success('🎉 Successfully joined the waitlist!', {
+        duration: 5000,
+        position: 'top-center',
+        style: {
+          background: '#1a1a1a',
+          color: '#fff',
+          border: '1px solid #009933',
+          padding: '16px',
+          fontSize: '16px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+        },
+        icon: '✨',
+      });
       setEmail('');
     } catch (error) {
-      // Error handling is done in the service via toast
+      toast.error('Failed to join waitlist. Please try again.', {
+        duration: 5000,
+        position: 'top-center',
+        style: {
+          background: '#1a1a1a',
+          color: '#fff',
+          border: '1px solid #ff4444',
+          padding: '16px',
+          fontSize: '16px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+        },
+      });
     } finally {
       setIsLoading(false);
     }
