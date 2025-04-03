@@ -55,38 +55,38 @@ const Waitlist: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#000000]">
-      <div className="max-w-4xl mx-auto px-4 py-16">
+    <div className="min-h-screen flex items-center justify-center bg-[#000000] px-4">
+      <div className="w-full max-w-4xl mx-auto py-8 sm:py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="backdrop-blur-sm bg-black/30 rounded-2xl shadow-xl border border-[#009933]/30 p-8 relative overflow-hidden"
+          className="backdrop-blur-sm bg-black/30 rounded-2xl shadow-xl border border-[#009933]/30 p-4 sm:p-8 relative overflow-hidden"
         >
-          <div className="text-center space-y-6">
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-light tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
+          <div className="text-center space-y-4 sm:space-y-6">
+            <h1 className="text-3xl sm:text-4xl md:text-7xl font-light tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
               <span className="font-extralight">SCY</span>
               <span className="font-medium"> Token </span>
               <span className="font-extralight">Creator</span>
             </h1>
             
-            <p className="text-gray-400 text-xl max-w-2xl mx-auto">
+            <p className="text-gray-400 text-lg sm:text-xl max-w-2xl mx-auto px-4">
               Join our waitlist to be notified when we launch our token creation platform
             </p>
 
-            <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-6">
-              <div className="flex gap-4">
+            <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-6 px-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="flex-grow px-4 py-3 rounded-lg bg-black/50 border border-gray-800 text-white focus:border-purple-500 transition-colors"
+                  className="w-full px-4 py-3 rounded-lg bg-black/50 border border-gray-800 text-white focus:border-purple-500 transition-colors"
                   required
                   disabled={isLoading}
                 />
                 <button
                   type="submit"
-                  className={`px-6 py-3 bg-purple-500 text-white rounded-lg transition-colors ${
+                  className={`w-full sm:w-auto px-6 py-3 bg-purple-500 text-white rounded-lg transition-colors ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-600'
                   }`}
                   disabled={isLoading}
@@ -100,7 +100,7 @@ const Waitlist: React.FC = () => {
               <p className="text-gray-400 mb-4">Return to homepage?</p>
               <button
                 onClick={handleHomeClick}
-                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-purple-500/20 hover:border-purple-500/50 flex items-center gap-2 mx-auto cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-purple-500/20 hover:border-purple-500/50 flex items-center justify-center gap-2 mx-auto cursor-pointer"
               >
                 Home
                 <svg
