@@ -64,7 +64,7 @@ const Waitlist: React.FC = () => {
         >
           <div className="text-center space-y-4 sm:space-y-6">
             <h1 className="text-3xl sm:text-4xl md:text-7xl font-light tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
-              <span className="font-extralight">SCY</span>
+              <span className="font-extralight">Sonic</span>
               <span className="font-medium"> Token </span>
               <span className="font-extralight">Creator</span>
             </h1>
