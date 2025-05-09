@@ -7,7 +7,7 @@ import { createCustomToken, TokenConfig } from "@/solactions/createToken";
 import TokenCreationSuccess from "./ui/TokenCreationSuccess";
 
 import { toast } from "react-hot-toast"; // For error notifications
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "../solactions/WalletConnect";
 
 export default function TokenCreator() {
   const [name, setName] = useState("");
@@ -30,7 +30,7 @@ export default function TokenCreator() {
   };
 
   // Inside your component
-  const wallet = useAnchorWallet();
+  const wallet = useWallet();
   // const { connection } = useConnection();
   console.log(wallet?.publicKey);
 
@@ -55,10 +55,7 @@ export default function TokenCreator() {
     e.preventDefault();
 
     try {
-      // if (!wallet.connected) {
-      //   throw new Error("Please connect your wallet first");
-      // }
-      if (!wallet) {
+      if (!wallet.publicKey) {
         toast.error("Please connect your wallet first");
         return;
       }
@@ -81,9 +78,17 @@ export default function TokenCreator() {
 
       validateTokenConfig(tokenConfig);
 
+      if (!wallet.publicKey) {
+        throw new Error("Wallet is not properly connected");
+      }
+
       const tokenDetails = await createCustomToken({
         config: tokenConfig,
-        wallet,
+        wallet: {
+          publicKey: wallet.publicKey,
+          signTransaction: wallet.signTransaction ?? (async (transaction) => Promise.reject(new Error("signTransaction is undefined"))),
+          signAllTransactions: wallet.signAllTransactions ?? (async (transactions) => transactions),
+        },
       });
 
       setTokenDetails(tokenDetails);

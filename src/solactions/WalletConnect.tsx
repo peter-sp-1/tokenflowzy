@@ -53,9 +53,7 @@ const WalletContextProvider: React.FC<WalletContextProviderProps> = ({
 }) => {
   const network = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-
   const wallets = useMemo(() => [new PhantomWalletAdapter()], [network]);
-
   const wallet = useSolanaWallet();
 
   return (
