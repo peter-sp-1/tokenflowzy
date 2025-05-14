@@ -24,7 +24,7 @@ const Landing: React.FC = () => {
               <span className="font-extralight">Creator</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto">
-              Create and deploy custom SPL tokens on SonicSvm with elegance and precision
+              Create and deploy custom SPL tokens on Solana with elegance and precision
             </p>
             <div className="flex gap-4 justify-center pt-8">
               <button
@@ -55,7 +55,7 @@ const Landing: React.FC = () => {
               },
               {
                 title: 'Secure',
-                description: 'Built on SonicSvm blockchain technology',
+                description: 'Built on Solana blockchain technology',
                 icon: '🔒',
               },
               {

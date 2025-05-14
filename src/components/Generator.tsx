@@ -126,7 +126,7 @@ export default function TokenCreator() {
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white overflow-x-hidden bg-black pb-16">
+    <div className="min-h-screen bg-[#000000] text-white bg-black pb-16 pt-16"> {/* Removed overflow-x-hidden */}
       {/* Gradient Mesh Background */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-purple-900/20 via-black to-blue-900/20" />
 
@@ -148,7 +148,7 @@ export default function TokenCreator() {
           <div className="text-center space-y-4 sm:space-y-6">
             <motion.div className="relative inline-block px-4 sm:px-0">
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-light tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
-                <span className="font-extralight">Sonic</span>
+                <span className="font-extralight">SPL</span>
                 <span className="font-medium"> Token </span>
                 <span className="font-extralight">Creator</span>
               </h1>
@@ -158,7 +158,7 @@ export default function TokenCreator() {
               variants={itemVariants}
               className="text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed tracking-wide font-light"
             >
-              Create and deploy custom SPL tokens on SonicSvm with elegance and
+              Create and deploy custom SPL tokens on Solana with elegance and
               precision
             </motion.p>
           </div>
