@@ -19,7 +19,7 @@ const Landing: React.FC = () => {
             className="space-y-6"
           >
             <h1 className="text-5xl md:text-7xl font-light tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
-              <span className="font-extralight">Sonic</span>
+              <span className="font-extralight">Solana</span>
               <span className="font-medium"> Token </span>
               <span className="font-extralight">Creator</span>
             </h1>

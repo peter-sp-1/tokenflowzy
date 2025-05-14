@@ -10,29 +10,36 @@ import WalletContextProvider from "./solactions/WalletConnect";
 
 function App() {
   return (
-    <WalletContextProvider>
-      <Router>
-        <Toaster
-          position="top-center"
-          reverseOrder={false}
-          toastOptions={{
-            duration: 5000,
-            style: {
-              background: '#1a1a1a',
-              color: '#fff',
-            },
-          }}
-        />
-        <div className="min-h-screen bg-[#000000]">
-          <Header />
-          <Routes>
-            <Route path="/" element={<Generator />} />
-            <Route path="/waitlist" element={<Waitlist />} />
-          </Routes>
-          <Footer />
-        </div>
-      </Router>
-    </WalletContextProvider>
+    <>
+      <WalletContextProvider>
+        <Router>
+          <Toaster
+            position="top-right"
+            reverseOrder={false}
+            gutter={8}
+            containerStyle={{
+              top: 80, // Add space below the header
+            }}
+            toastOptions={{
+              duration: 5000,
+              style: {
+                background: '#1a1a1a',
+                color: '#fff',
+                border: '1px solid rgba(147, 51, 234, 0.3)',
+              },
+            }}
+          />
+          <div className="min-h-screen bg-[#000000]">
+            <Header />
+            <Routes>
+              <Route path="/" element={<Generator />} />
+              <Route path="/waitlist" element={<Waitlist />} />
+            </Routes>
+            <Footer />
+          </div>
+        </Router>
+      </WalletContextProvider>
+    </>
   );
 }
 
