@@ -7,7 +7,7 @@ import { createCustomToken, TokenConfig } from "@/solactions/createToken";
 import TokenCreationSuccess from "./ui/TokenCreationSuccess";
 
 import { toast } from "react-hot-toast"; // For error notifications
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, AnchorWallet } from "@solana/wallet-adapter-react";
 
 export default function TokenCreator() {
   const [name, setName] = useState("");
@@ -54,12 +54,12 @@ export default function TokenCreator() {
   const handleCreateToken = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!wallet.connected || !wallet.publicKey) {
-      toast.error("Please connect your wallet first");
-      return;
-    }
-
     try {
+      if (!wallet.publicKey) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+
       const tokenConfig: TokenConfig = {
         name,
         symbol,
@@ -80,21 +80,35 @@ export default function TokenCreator() {
 
       const loadingToast = toast.loading("Creating token...");
 
+      // Type guard to ensure wallet is AnchorWallet
+      if (!wallet.publicKey || !wallet.signTransaction || !wallet.signAllTransactions) {
+        throw new Error("Wallet does not support required signing methods.");
+      }
+
       const result = await createCustomToken({
         config: tokenConfig,
-        wallet: {
-          publicKey: wallet.publicKey,
-          signTransaction: wallet.signTransaction!,
-          signAllTransactions: wallet.signAllTransactions!,
-        },
+        wallet: wallet as AnchorWallet,
       });
 
       toast.dismiss(loadingToast);
       setTokenDetails(result);
       setShowSuccessModal(true);
       toast.success("Token created successfully!");
+
+      // Clear form after successful creation
+      setName("");
+      setSymbol("");
+      setDecimals(6);
+      setSupply("");
+      setDescription("");
+      setImage(null);
+      setActiveExtensions([]);
+
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create token");
+      console.error("Token creation error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create token"
+      );
     }
   };
 
@@ -145,7 +159,7 @@ export default function TokenCreator() {
           <div className="text-center space-y-4 sm:space-y-6">
             <motion.div className="relative inline-block px-4 sm:px-0">
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-light tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400">
-                <span className="font-extralight">SOL</span>
+                <span className="font-extralight">SPL</span>
                 <span className="font-medium"> Token </span>
                 <span className="font-extralight">Creator</span>
               </h1>

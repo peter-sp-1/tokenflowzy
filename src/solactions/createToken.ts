@@ -26,7 +26,7 @@ import 'crypto';
 import { createInitializeInstruction, pack, TokenMetadata } from '@solana/spl-token-metadata';
 import * as anchor from '@project-serum/anchor';
 import { CENTRAL_PDA, FEE_MANAGER_PROGRAM, FEE_MANAGER_IDL } from './feeManager';
-
+import { setupTokenReflection } from '@/services/api';
 
 export interface TokenConfig {
     name: string;
@@ -42,36 +42,57 @@ export interface TokenConfig {
     };
 }
 
-// Replace the existing uploadMetadataToArweave function with:
-// async function uploadMetadataToArweave(metadata: any, wallet: AnchorWallet): Promise<string> {
-//     try {
-//         const bundlr = new WebBundlr(
-//             "https://node1.bundlr.network",
-//             "solana",
-//             wallet,
-//             { providerUrl: "https://api.devnet.solana.com" }
-//         );
+// Add this helper function at the top of the file
+async function sendAndConfirmWithRetry(
+    connection: Connection,
+    transaction: Transaction,
+    signers: Keypair[],
+    wallet: AnchorWallet,
+    maxRetries = 3
+): Promise<string> {
+    let lastError;
 
-//         await bundlr.ready();
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            // Get a fresh blockhash for each attempt
+            const latestBlockhash = await connection.getLatestBlockhash('confirmed');
+            transaction.recentBlockhash = latestBlockhash.blockhash;
+            transaction.feePayer = wallet.publicKey;
 
-//         const metadataBuffer = Buffer.from(JSON.stringify(metadata));
-//         const price = await bundlr.getPrice(metadataBuffer.length);
-//         const balance = await bundlr.getLoadedBalance();
+            // Clear previous signatures
+            transaction.signatures = [];
 
-//         if (balance.isLessThan(price)) {
-//             await bundlr.fund(price.minus(balance).multipliedBy(1.1).toNumber());
-//         }
+            // Sign with all signers
+            signers.forEach(signer => {
+                transaction.partialSign(signer);
+            });
 
-//         const tags = [{ name: "Content-Type", value: "application/json" }];
-//         const uploader = bundlr.uploader.chunkedUploader;
-//         const response = await uploader.uploadData(metadataBuffer, { tags });
+            const signedTx = await wallet.signTransaction(transaction);
 
-//         return `https://arweave.net/${response.id}`;
-//     } catch (error) {
-//         console.error("Error uploading metadata:", error);
-//         throw error;
-//     }
-// }
+            const txId = await connection.sendRawTransaction(signedTx.serialize(), {
+                skipPreflight: true,
+                maxRetries: 3,
+            });
+
+            // Wait for confirmation with shorter timeout
+            await connection.confirmTransaction({
+                signature: txId,
+                blockhash: latestBlockhash.blockhash,
+                lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            }, 'confirmed');
+
+            return txId;
+        } catch (error) {
+            lastError = error;
+            console.warn(`Attempt ${attempt + 1} failed:`, error);
+            
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+    }
+
+    throw lastError;
+}
 
 function generateExplorerTxUrl(txId: string | any) {
     return `https://explorer.solana.com/tx/${txId}?cluster=devnet`;
@@ -87,244 +108,175 @@ export async function createCustomToken({ config, wallet }: CreateTokenParams) {
         throw new Error('Wallet not connected');
     }
 
-    const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+    const connection = new Connection('https://api.devnet.solana.com', { 
+        commitment: 'confirmed',
+        confirmTransactionInitialTimeout: 60000 // 60 second timeout
+    });
+    
     const nullAddress = new PublicKey('11111111111111111111111111111111');
-    const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
+    const provider = new anchor.AnchorProvider(connection, wallet, {
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed'
+    });
     const program = new anchor.Program(FEE_MANAGER_IDL, FEE_MANAGER_PROGRAM, provider);
-    // const baseAccount = new PublicKey(CENTRAL_PDA);
     const payer = wallet.publicKey;
-    const mintAuthority = wallet.publicKey;
     const mintKeypair = Keypair.generate();
     const mint = mintKeypair.publicKey;
 
+    // Validate config and set defaults
     if (!config.description) {
         config.description = 'No description provided';
     }
-     // **STEP 1: Upload image if provided**
-     let imageUri = "";
-     if (config.image) {
-         console.log("Uploading image...");
-         imageUri = ""; //await uploadImageToArweave(config.image, wallet, connection);
-         console.log("Image uploaded:", imageUri);
-     }
 
-     // **STEP 2: Upload metadata**
-    // const metadataupload = {
-    //     name: config.name,
-    //     symbol: config.symbol,
-    //     description: config.description || "No description provided",
-    //     image: imageUri,  // Link to uploaded image
-    //     attributes: [],
-    // };
-
-    console.log("Uploading metadata...");
-    const metadataUri = ""; // await uploadMetadataToArweave(metadataupload, wallet);
-    console.log("Metadata uploaded:", metadataUri);
-
-
+    // Create metadata object
     const metadata: TokenMetadata = {
         mint: mint,
         name: config.name,
         symbol: config.symbol,
-        uri: metadataUri,
+        uri: "", // Empty URI since we're not using Arweave for now
         additionalMetadata: [['description', config.description]],
     };
 
-    console.log("Creating token with metadata URI:", metadataUri);
-
-
-
-    // Bundle all instructions into a single transaction
-    const transaction = new Transaction();
-    
-    // Calculate mint account size and rent
+    // Calculate extensions and mint account size
     const extensions: ExtensionType[] = [ExtensionType.MetadataPointer];
-    if (config.extensions.transferFee) {
-        extensions.push(ExtensionType.TransferFeeConfig);
-    }
-    if (config.extensions.interestBearing) {
-        extensions.push(ExtensionType.InterestBearingConfig);
-    }
+    if (config.extensions.transferFee) extensions.push(ExtensionType.TransferFeeConfig);
+    if (config.extensions.interestBearing) extensions.push(ExtensionType.InterestBearingConfig);
+    
     const mintLen = getMintLen(extensions);
     const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
-
     const mintLamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
-    
-    // Add initialize transfer fee config instruction
+
+    // Create transaction
+    const transaction = new Transaction();
+
     try {
-        const tx = await program.methods.deposit(
-            new anchor.BN(0.1*LAMPORTS_PER_SOL)
+        // Add deposit instruction
+        const depositTx = await program.methods.deposit(
+            new anchor.BN(0.1 * LAMPORTS_PER_SOL)
         ).accounts({
-                depositor: wallet.publicKey,
-                vaultState: new anchor.web3.PublicKey(CENTRAL_PDA),
-                systemProgram: SystemProgram.programId
-            }).instruction();
+            depositor: wallet.publicKey,
+            vaultState: new anchor.web3.PublicKey(CENTRAL_PDA),
+            systemProgram: SystemProgram.programId
+        }).instruction();
 
-        transaction.add(tx)
-    } catch (err: any) {
-        console.error("Error depsiting:", err);
-    }
-    
-    
-    // Add create mint account instruction
-    if (config.extensions.renounce) {
-        console.log(config.extensions.renounce);
-        transaction.add(
-            SystemProgram.createAccount({
-                fromPubkey: payer,
-                newAccountPubkey: mint,
-                space: mintLen,
-                lamports: mintLamports,
-                programId: TOKEN_2022_PROGRAM_ID,
-            }),
-            
-            createInitializeMetadataPointerInstruction(
-                mint, 
-                payer, 
-                mint, 
-                TOKEN_2022_PROGRAM_ID
-            ),
+        transaction.add(depositTx);
 
-            createInitializeMintInstruction(
-                mint,
-                config.decimals,
-                nullAddress,
-                nullAddress,
-                TOKEN_2022_PROGRAM_ID
-            ),
+        // Add token creation instructions based on config
+        const createAccountIx = SystemProgram.createAccount({
+            fromPubkey: payer,
+            newAccountPubkey: mint,
+            space: mintLen,
+            lamports: mintLamports,
+            programId: TOKEN_2022_PROGRAM_ID,
+        });
 
-            createInitializeInstruction({
-                programId: TOKEN_2022_PROGRAM_ID,
-                mint: mint,
-                metadata: mint,
-                name: metadata.name,
-                symbol: metadata.symbol,
-                uri: metadata.uri,
-                mintAuthority: nullAddress,
-                updateAuthority: nullAddress,
-            }),
+        const metadataPointerIx = createInitializeMetadataPointerInstruction(
+            mint, payer, mint, TOKEN_2022_PROGRAM_ID
         );
-    } else {
-        transaction.add(
-            SystemProgram.createAccount({
-                fromPubkey: payer,
-                newAccountPubkey: mint,
-                space: mintLen,
-                lamports: mintLamports,
-                programId: TOKEN_2022_PROGRAM_ID,
-            }),
-            
-            createInitializeMetadataPointerInstruction(
-                mint, 
-                payer, 
-                mint, 
-                TOKEN_2022_PROGRAM_ID
-            ),
 
-            createInitializeMintInstruction(
-                mint, 
-                config.decimals, 
-                payer, 
-                payer, 
-                TOKEN_2022_PROGRAM_ID
-            ),
-
-            createInitializeInstruction({
-                programId: TOKEN_2022_PROGRAM_ID,
-                mint: mint,
-                metadata: mint,
-                name: metadata.name,
-                symbol: metadata.symbol,
-                uri: metadata.uri,
-                mintAuthority: payer,
-                updateAuthority: payer,
-            }),
-        );
-    }
-
-    
-    // Add transfer fee config if enabled
-    if (config.extensions.transferFee) {
-        const feeBasisPoints = 100;
-        const maxFee = BigInt(9 * 10 ** config.decimals);
-        transaction.add(
-            createInitializeTransferFeeConfigInstruction(
-                mint,
-                payer,
-                payer,
-                feeBasisPoints,
-                maxFee,
-                TOKEN_2022_PROGRAM_ID
-            )
-        );
-    }
-
-    
-
-    // Create and add ATA instruction
-    const sourceAccount = await getAssociatedTokenAddress(
-        mint,
-        payer,
-        false,
-        TOKEN_2022_PROGRAM_ID
-    );
-    
-    transaction.add(
-        createAssociatedTokenAccountInstruction(
-            payer,
-            sourceAccount,
-            payer,
+        const mintIx = createInitializeMintInstruction(
             mint,
+            config.decimals,
+            config.extensions.renounce ? nullAddress : payer,
+            config.extensions.renounce ? nullAddress : payer,
             TOKEN_2022_PROGRAM_ID
-        )
-    );
+        );
 
-    // Add mint-to instruction
-    const mintAmount = BigInt(Number(config.supply) * 10 ** config.decimals);
-    transaction.add(
-        createMintToInstruction(
+        const initializeIx = createInitializeInstruction({
+            programId: TOKEN_2022_PROGRAM_ID,
+            mint: mint,
+            metadata: mint,
+            name: metadata.name,
+            symbol: metadata.symbol,
+            uri: metadata.uri,
+            mintAuthority: config.extensions.renounce ? nullAddress : payer,
+            updateAuthority: config.extensions.renounce ? nullAddress : payer,
+        });
+
+        transaction.add(createAccountIx, metadataPointerIx, mintIx, initializeIx);
+
+        // Add transfer fee config if enabled
+        if (config.extensions.transferFee) {
+            const feeBasisPoints = 100; // 1%
+            const maxFee = BigInt(9 * 10 ** config.decimals);
+            const transferFeeIx = createInitializeTransferFeeConfigInstruction(
+                mint, payer, payer, feeBasisPoints, maxFee, TOKEN_2022_PROGRAM_ID
+            );
+            transaction.add(transferFeeIx);
+        }
+
+        // Create and add ATA instruction
+        const sourceAccount = await getAssociatedTokenAddress(
+            mint, payer, false, TOKEN_2022_PROGRAM_ID
+        );
+        
+        const ataIx = createAssociatedTokenAccountInstruction(
+            payer, sourceAccount, payer, mint, TOKEN_2022_PROGRAM_ID
+        );
+        
+        const mintToIx = createMintToInstruction(
             mint,
             sourceAccount,
-            mintAuthority,
-            mintAmount,
+            payer,
+            BigInt(Number(config.supply) * 10 ** config.decimals),
             [],
             TOKEN_2022_PROGRAM_ID
-        )
-    );
+        );
 
-    // Sign and send transaction
-    const latestBlockhash = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = latestBlockhash.blockhash;
-    transaction.feePayer = payer;  // Set wallet as fee payer
-    
-    // First sign with mint keypair
-    transaction.partialSign(mintKeypair);
-    
-    // Then let the wallet sign to pay fees
-    const signedTx = await wallet.signTransaction(transaction);
-    
-    // Send with preflight disabled and retry on failure
-    const txId = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: true,
-        maxRetries: 3,
-    });
-    
-    // Wait for confirmation with commitment
-    await connection.confirmTransaction({
-        signature: txId,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-    }, 'confirmed');
+        transaction.add(ataIx, mintToIx);
 
-    console.log('Token Created and Initialized:', generateExplorerTxUrl(txId));
+        // Replace the transaction sending and confirmation code with:
+        const txId = await sendAndConfirmWithRetry(
+            connection,
+            transaction,
+            [mintKeypair],
+            wallet
+        );
 
-    // Add delay before metadata creation
-    await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log('Token Created:', generateExplorerTxUrl(txId));
 
-    return {
-        mint: mint.toBase58(),
-        txId: txId,
-        // owner: payer.toString(),
-        // sourceAccount: sourceAccount.toString(),
-    };
+        // Setup reflection with better error handling
+        try {
+            await setupReflection(mint.toString(), config, wallet.publicKey.toString());
+            console.log('Reflection setup completed');
+        } catch (error) {
+            console.warn('Reflection setup warning:', error);
+            // Continue despite reflection setup failure
+        }
+
+        return {
+            mint: mint.toBase58(),
+            txId,
+            success: true,
+            reflectionSetup: true
+        };
+
+    } catch (error) {
+        console.error("Token creation failed:", error);
+        throw new Error(
+            error instanceof Error 
+                ? `Token creation failed: ${error.message}` 
+                : "Failed to create token"
+        );
+    }
+}
+
+// Helper function for reflection setup
+async function setupReflection(
+    mintAddress: string,
+    config: TokenConfig,
+    ownerAddress: string
+): Promise<void> {
+    try {
+        await setupTokenReflection({
+            tokenMint: mintAddress,
+            tokenName: config.name,
+            tokenSymbol: config.symbol,
+            decimals: config.decimals,
+            owner: ownerAddress
+        });
+    } catch (error) {
+        console.warn('Reflection setup failed:', error);
+        // Don't throw the error to keep the token creation process going
+    }
 }

@@ -19,7 +19,7 @@ interface WalletContextProviderProps {
 }
 
 const WalletContextProvider: React.FC<WalletContextProviderProps> = ({ children }) => {
-  // Set network to Devnet
+  // Explicitly set network to Devnet
   const network = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
